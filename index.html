@@ -234,12 +234,16 @@
       { id: 'ranczo',              name: 'Ranczo',              icon: '🌾', color: '#70b060' },
     ];
 
-    let progress = {};
+    const CACHE_KEY = 'episode-tracker-progress';
+
+    let progress = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
 
     async function load() {
+      if (Object.keys(progress).length) render();
       const { data, error } = await supabase.from('progress').select();
       if (error) { showToast('Failed to load progress.'); return; }
       progress = Object.fromEntries((data || []).map(r => [r.show_id, { season: r.season, episode: r.episode }]));
+      localStorage.setItem(CACHE_KEY, JSON.stringify(progress));
       render();
     }
 
@@ -306,6 +310,7 @@
       if (error) { showToast('Failed to save. Try again.'); return; }
 
       progress[id] = { season, episode };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(progress));
       document.getElementById(`sub-${id}`).textContent =
         `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
       document.getElementById(`s-${id}`).value = season;
@@ -327,6 +332,7 @@
       if (error) { showToast('Failed to save. Try again.'); return; }
 
       progress[id] = { season, episode };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(progress));
       document.getElementById(`sub-${id}`).textContent =
         `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
       updateSetBtn(id);
