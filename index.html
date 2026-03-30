@@ -1,40 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Episode Tracker</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
-      --bg:         #0f0f13;
-      --bg-card:    #1a1a24;
-      --border:     #2a2a38;
-      --text:       #e8e8f0;
-      --text-head:  #ffffff;
+      --bg: #0f0f13;
+      --bg-card: #1a1a24;
+      --border: #2a2a38;
+      --text: #e8e8f0;
+      --text-head: #ffffff;
       --text-muted: #6b6b80;
-      --input-bg:   #0f0f13;
-      --btn-bg:     #2a2a38;
-      --btn-color:  #9999b3;
-      --btn-hover:  #35354a;
-      --accent:     #5b5bf0;
+      --input-bg: #0f0f13;
+      --btn-bg: #2a2a38;
+      --btn-color: #9999b3;
+      --btn-hover: #35354a;
+      --accent: #5b5bf0;
       --accent-hover: #4a4add;
     }
 
     @media (prefers-color-scheme: light) {
       :root {
-        --bg:         #f2f2f7;
-        --bg-card:    #ffffff;
-        --border:     #d1d1db;
-        --text:       #1c1c1e;
-        --text-head:  #000000;
+        --bg: #f2f2f7;
+        --bg-card: #ffffff;
+        --border: #d1d1db;
+        --text: #1c1c1e;
+        --text-head: #000000;
         --text-muted: #8e8e9a;
-        --input-bg:   #f2f2f7;
-        --btn-bg:     #e5e5ea;
-        --btn-color:  #5a5a72;
-        --btn-hover:  #d1d1db;
-        --accent:     #5b5bf0;
+        --input-bg: #f2f2f7;
+        --btn-bg: #e5e5ea;
+        --btn-color: #5a5a72;
+        --btn-hover: #d1d1db;
+        --accent: #5b5bf0;
         --accent-hover: #4a4add;
       }
     }
@@ -151,7 +155,7 @@
     .next-btn {
       width: 100%;
       background: var(--accent);
-      color: #fff;
+      color: #ffffff;
       border: none;
       border-radius: 8px;
       padding: 13px;
@@ -163,8 +167,13 @@
       letter-spacing: 0.2px;
     }
 
-    .next-btn:hover { background: var(--accent-hover); }
-    .next-btn:active { transform: scale(0.98); }
+    .next-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .next-btn:active {
+      transform: scale(0.98);
+    }
 
     .save-row {
       display: grid;
@@ -186,9 +195,19 @@
       white-space: nowrap;
     }
 
-    .save-btn:hover:not(:disabled) { background: var(--btn-hover); color: var(--text); }
-    .save-btn:active:not(:disabled) { transform: scale(0.98); }
-    .save-btn:disabled { opacity: 0.35; cursor: default; }
+    .save-btn:hover:not(:disabled) {
+      background: var(--btn-hover);
+      color: var(--text);
+    }
+
+    .save-btn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .save-btn:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
 
     .toast {
       position: fixed;
@@ -206,61 +225,65 @@
       white-space: nowrap;
     }
 
-    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body>
-  <h1>Episode Tracker</h1>
-  <p class="subtitle">Pick up where you left off.</p>
+<h1>Episode Tracker</h1>
+<p class="subtitle">Pick up where you left off.</p>
 
-  <div class="cards" id="cards"></div>
-  <div class="toast" id="toast"></div>
+<div class="cards" id="cards"></div>
+<div class="toast" id="toast"></div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<script type="module">
+  import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabase = createClient(
-      'https://yvrpfmsckwitwpnnluyl.supabase.co',
-      'sb_publishable_DreRUXTzLAE1oRD2rgPIhQ_qR9q3kPA'
-    );
+  const supabase = createClient(
+    'https://yvrpfmsckwitwpnnluyl.supabase.co',
+    'sb_publishable_DreRUXTzLAE1oRD2rgPIhQ_qR9q3kPA',
+  );
 
-    const shows = [
-      { id: 'the-big-bang-theory', name: 'The Big Bang Theory', icon: '🔭', color: '#f0a500' },
-      { id: 'the-office',          name: 'The Office',          icon: '📎', color: '#4fa3e0' },
-      { id: 'sherlock',            name: 'Sherlock',            icon: '🔍', color: '#a0b4c8' },
-      { id: 'szadz',               name: 'Szadź',               icon: '❄️', color: '#60c8e0' },
-      { id: 'chylka',              name: 'Chyłka',              icon: '⚖️', color: '#c06070' },
-      { id: 'mlody-szeldon',       name: 'Młody Szeldon',       icon: '🧠', color: '#9b59b6' },
-      { id: 'ranczo',              name: 'Ranczo',              icon: '🌾', color: '#70b060' },
-    ];
+  const shows = [
+    {id: 'the-big-bang-theory', name: 'The Big Bang Theory', icon: '🔭', color: '#f0a500'},
+    {id: 'the-office', name: 'The Office', icon: '📎', color: '#4fa3e0'},
+    {id: 'sherlock', name: 'Sherlock', icon: '🔍', color: '#a0b4c8'},
+    {id: 'szadz', name: 'Szadź', icon: '❄️', color: '#60c8e0'},
+    {id: 'chylka', name: 'Chyłka', icon: '⚖️', color: '#c06070'},
+    {id: 'mlody-szeldon', name: 'Młody Szeldon', icon: '🧠', color: '#9b59b6'},
+    {id: 'ranczo', name: 'Ranczo', icon: '🌾', color: '#70b060'},
+  ];
 
-    const CACHE_KEY = 'episode-tracker-progress';
+  const CACHE_KEY = 'episode-tracker-progress';
+  let progress = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
 
-    let progress = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-
-    async function load() {
-      if (Object.keys(progress).length) render();
-      const { data, error } = await supabase.from('progress').select();
-      if (error) { showToast('Failed to load progress.'); return; }
-      progress = Object.fromEntries((data || []).map(r => [r.show_id, { season: r.season, episode: r.episode }]));
-      localStorage.setItem(CACHE_KEY, JSON.stringify(progress));
-      render();
+  async function load() {
+    if (Object.keys(progress).length) render();
+    const {data, error} = await supabase.from('progress').select();
+    if (error) {
+      showToast('Failed to load progress.');
+      return;
     }
+    progress = Object.fromEntries((data || []).map(r => [r.show_id, {season: r.season, episode: r.episode}]));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(progress));
+    render();
+  }
 
-    function render() {
-      const container = document.getElementById('cards');
-      container.innerHTML = '';
+  function render() {
+    const container = document.getElementById('cards');
+    container.innerHTML = '';
 
-      shows.forEach(show => {
-        const p = progress[show.id] || { season: 1, episode: 1 };
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
+    shows.forEach(show => {
+      const p = progress[show.id] || {season: 1, episode: 1};
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
           <div class="card-header">
             <div class="card-icon" style="background:${show.color}22; color:${show.color}">${show.icon}</div>
             <div>
               <div class="card-title">${show.name}</div>
-              <div class="card-subtitle" id="sub-${show.id}">Last watched: S${String(p.season).padStart(2,'0')}E${String(p.episode).padStart(2,'0')}</div>
+              <div class="card-subtitle" id="sub-${show.id}">Last watched: S${String(p.season).padStart(2, '0')}E${String(p.episode).padStart(2, '0')}</div>
             </div>
           </div>
           <button class="next-btn" data-id="${show.id}" data-name="${show.name}">▶ Next Episode</button>
@@ -276,79 +299,86 @@
             <button class="save-btn" data-id="${show.id}" data-name="${show.name}" disabled>Set</button>
           </div>
         `;
-        container.appendChild(card);
+      container.appendChild(card);
+    });
+
+    document.querySelectorAll('.next-btn').forEach(btn => {
+      btn.addEventListener('click', () => nextEpisode(btn.dataset.id, btn.dataset.name));
+    });
+    document.querySelectorAll('.save-btn').forEach(btn => {
+      btn.addEventListener('click', () => save(btn.dataset.id, btn.dataset.name));
+    });
+    document.querySelectorAll('.save-row input').forEach(input => {
+      input.addEventListener('input', () => {
+        const id = input.id.slice(2); // strip "s-" or "e-"
+        updateSetBtn(id);
       });
+    });
+  }
 
-      document.querySelectorAll('.next-btn').forEach(btn => {
-        btn.addEventListener('click', () => nextEpisode(btn.dataset.id, btn.dataset.name));
-      });
-      document.querySelectorAll('.save-btn').forEach(btn => {
-        btn.addEventListener('click', () => save(btn.dataset.id, btn.dataset.name));
-      });
-      document.querySelectorAll('.save-row input').forEach(input => {
-        input.addEventListener('input', () => {
-          const id = input.id.slice(2); // strip "s-" or "e-"
-          updateSetBtn(id);
-        });
-      });
+  function updateSetBtn(id) {
+    const cur = progress[id] || {season: 1, episode: 1};
+    const s = parseInt(document.getElementById(`s-${id}`).value, 10);
+    const e = parseInt(document.getElementById(`e-${id}`).value, 10);
+    const unchanged = s === parseInt(cur.season, 10) && e === parseInt(cur.episode, 10);
+    document.querySelector(`.save-btn[data-id="${id}"]`).disabled = unchanged || !s || !e;
+  }
+
+  async function nextEpisode(id, name) {
+    const cur = progress[id] || {season: 1, episode: 1};
+    const season = parseInt(cur.season, 10);
+    const episode = parseInt(cur.episode, 10) + 1;
+
+    const {error} = await supabase.from('progress').upsert({show_id: id, season, episode});
+    if (error) {
+      showToast('Failed to save. Try again.');
+      return;
     }
 
-    function updateSetBtn(id) {
-      const cur = progress[id] || { season: 1, episode: 1 };
-      const s = parseInt(document.getElementById(`s-${id}`).value, 10);
-      const e = parseInt(document.getElementById(`e-${id}`).value, 10);
-      const unchanged = s === parseInt(cur.season, 10) && e === parseInt(cur.episode, 10);
-      document.querySelector(`.save-btn[data-id="${id}"]`).disabled = unchanged || !s || !e;
+    progress[id] = {season, episode};
+    localStorage.setItem(CACHE_KEY, JSON.stringify(progress));
+    document.getElementById(`sub-${id}`).textContent =
+      `Last watched: S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`;
+    document.getElementById(`s-${id}`).value = season;
+    document.getElementById(`e-${id}`).value = episode;
+    updateSetBtn(id);
+    showToast(`${name} → S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`);
+  }
+
+  async function save(id, name) {
+    const season = parseInt(document.getElementById(`s-${id}`).value, 10);
+    const episode = parseInt(document.getElementById(`e-${id}`).value, 10);
+
+    if (!season || !episode || season < 1 || episode < 1) {
+      showToast('Please enter valid season and episode numbers.');
+      return;
     }
 
-    async function nextEpisode(id, name) {
-      const cur = progress[id] || { season: 1, episode: 1 };
-      const season  = parseInt(cur.season, 10);
-      const episode = parseInt(cur.episode, 10) + 1;
-
-      const { error } = await supabase.from('progress').upsert({ show_id: id, season, episode });
-      if (error) { showToast('Failed to save. Try again.'); return; }
-
-      progress[id] = { season, episode };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(progress));
-      document.getElementById(`sub-${id}`).textContent =
-        `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
-      document.getElementById(`s-${id}`).value = season;
-      document.getElementById(`e-${id}`).value = episode;
-      updateSetBtn(id);
-      showToast(`${name} → S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`);
+    const {error} = await supabase.from('progress').upsert({show_id: id, season, episode});
+    if (error) {
+      showToast('Failed to save. Try again.');
+      return;
     }
 
-    async function save(id, name) {
-      const season  = parseInt(document.getElementById(`s-${id}`).value, 10);
-      const episode = parseInt(document.getElementById(`e-${id}`).value, 10);
+    progress[id] = {season, episode};
+    localStorage.setItem(CACHE_KEY, JSON.stringify(progress));
+    document.getElementById(`sub-${id}`).textContent =
+      `Last watched: S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`;
+    updateSetBtn(id);
+    showToast(`${name} saved.`);
+  }
 
-      if (!season || !episode || season < 1 || episode < 1) {
-        showToast('Please enter valid season and episode numbers.');
-        return;
-      }
+  let toastTimer;
 
-      const { error } = await supabase.from('progress').upsert({ show_id: id, season, episode });
-      if (error) { showToast('Failed to save. Try again.'); return; }
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+  }
 
-      progress[id] = { season, episode };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(progress));
-      document.getElementById(`sub-${id}`).textContent =
-        `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
-      updateSetBtn(id);
-      showToast(`${name} saved.`);
-    }
-
-    let toastTimer;
-    function showToast(msg) {
-      const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
-    }
-
-    load();
-  </script>
+  load();
+</script>
 </body>
 </html>
