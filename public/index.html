@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Episode Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f13;
+      color: #e8e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #6b6b80;
+      margin-bottom: 40px;
+    }
+
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .card {
+      background: #1a1a24;
+      border: 1px solid #2a2a38;
+      border-radius: 14px;
+      padding: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .card-subtitle {
+      font-size: 0.78rem;
+      color: #6b6b80;
+      margin-top: 2px;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      color: #6b6b80;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      background: #0f0f13;
+      border: 1px solid #2a2a38;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="number"]:focus {
+      border-color: #5b5bf0;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+
+    .save-btn {
+      width: 100%;
+      background: #5b5bf0;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .save-btn:hover { background: #4a4add; }
+    .save-btn:active { transform: scale(0.98); }
+
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #2a2a38;
+      color: #e8e8f0;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: transform 0.25s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <h1>Episode Tracker</h1>
+  <p class="subtitle">Pick up where you left off.</p>
+
+  <div class="cards" id="cards"></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const shows = [
+      { id: 'the-big-bang-theory', name: 'The Big Bang Theory', icon: '🔭', color: '#f0a500' },
+      { id: 'the-office',          name: 'The Office',          icon: '📎', color: '#4fa3e0' },
+      { id: 'friends',             name: 'Friends',             icon: '☕', color: '#e06c4f' },
+    ];
+
+    let progress = {};
+
+    async function load() {
+      const res = await fetch('/api/progress');
+      progress = await res.json();
+      render();
+    }
+
+    function render() {
+      const container = document.getElementById('cards');
+      container.innerHTML = '';
+
+      shows.forEach(show => {
+        const p = progress[show.id] || { season: 1, episode: 1 };
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="card-icon" style="background:${show.color}22; color:${show.color}">${show.icon}</div>
+            <div>
+              <div class="card-title">${show.name}</div>
+              <div class="card-subtitle" id="sub-${show.id}">Last watched: S${String(p.season).padStart(2,'0')}E${String(p.episode).padStart(2,'0')}</div>
+            </div>
+          </div>
+          <div class="fields">
+            <div>
+              <label>Season</label>
+              <input type="number" id="s-${show.id}" value="${p.season}" min="1" />
+            </div>
+            <div>
+              <label>Episode</label>
+              <input type="number" id="e-${show.id}" value="${p.episode}" min="1" />
+            </div>
+          </div>
+          <button class="save-btn" data-id="${show.id}" data-name="${show.name}">Save</button>
+        `;
+        container.appendChild(card);
+      });
+
+      document.querySelectorAll('.save-btn').forEach(btn => {
+        btn.addEventListener('click', () => save(btn.dataset.id, btn.dataset.name));
+      });
+    }
+
+    async function save(id, name) {
+      const season  = parseInt(document.getElementById(`s-${id}`).value, 10);
+      const episode = parseInt(document.getElementById(`e-${id}`).value, 10);
+
+      if (!season || !episode || season < 1 || episode < 1) {
+        showToast('Please enter valid season and episode numbers.');
+        return;
+      }
+
+      const res = await fetch(`/api/progress/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ season, episode }),
+      });
+
+      if (res.ok) {
+        progress[id] = { season, episode };
+        const sub = document.getElementById(`sub-${id}`);
+        sub.textContent = `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
+        showToast(`${name} saved.`);
+      } else {
+        showToast('Failed to save. Try again.');
+      }
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    load();
+  </script>
+</body>
+</html>
