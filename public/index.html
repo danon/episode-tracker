@@ -154,8 +154,9 @@
       white-space: nowrap;
     }
 
-    .save-btn:hover { background: #35354a; color: #e8e8f0; }
-    .save-btn:active { transform: scale(0.98); }
+    .save-btn:hover:not(:disabled) { background: #35354a; color: #e8e8f0; }
+    .save-btn:active:not(:disabled) { transform: scale(0.98); }
+    .save-btn:disabled { opacity: 0.35; cursor: default; }
 
     .toast {
       position: fixed;
@@ -224,7 +225,7 @@
               <label>Episode</label>
               <input type="number" id="e-${show.id}" value="${p.episode}" min="1" />
             </div>
-            <button class="save-btn" data-id="${show.id}" data-name="${show.name}">Set</button>
+            <button class="save-btn" data-id="${show.id}" data-name="${show.name}" disabled>Set</button>
           </div>
         `;
         container.appendChild(card);
@@ -236,6 +237,20 @@
       document.querySelectorAll('.save-btn').forEach(btn => {
         btn.addEventListener('click', () => save(btn.dataset.id, btn.dataset.name));
       });
+      document.querySelectorAll('.save-row input').forEach(input => {
+        input.addEventListener('input', () => {
+          const id = input.id.slice(2); // strip "s-" or "e-"
+          updateSetBtn(id);
+        });
+      });
+    }
+
+    function updateSetBtn(id) {
+      const cur = progress[id] || { season: 1, episode: 1 };
+      const s = parseInt(document.getElementById(`s-${id}`).value, 10);
+      const e = parseInt(document.getElementById(`e-${id}`).value, 10);
+      const unchanged = s === parseInt(cur.season, 10) && e === parseInt(cur.episode, 10);
+      document.querySelector(`.save-btn[data-id="${id}"]`).disabled = unchanged || !s || !e;
     }
 
     async function nextEpisode(id, name) {
@@ -256,6 +271,7 @@
             `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
           document.getElementById(`s-${id}`).value = season;
           document.getElementById(`e-${id}`).value = episode;
+          updateSetBtn(id);
           showToast(`${name} → S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`);
         } else {
           const err = await res.json().catch(() => ({}));
@@ -285,6 +301,7 @@
         progress[id] = { season, episode };
         const sub = document.getElementById(`sub-${id}`);
         sub.textContent = `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
+        updateSetBtn(id);
         showToast(`${name} saved.`);
       } else {
         showToast('Failed to save. Try again.');
