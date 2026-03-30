@@ -1,5 +1,10 @@
 {
-  "the-big-bang-theory": { "season": 1, "episode": 1 },
-  "the-office": { "season": 1, "episode": 1 },
-  "friends": { "season": 1, "episode": 1 }
+  "the-big-bang-theory": {"season": 1, "episode": 1},
+  "the-office": {"season": 1, "episode": 1},
+  "sherlock": {"season": 1, "episode": 1},
+  "friends": {"season": 1, "episode": 1},
+  "szadz": {"season": 1, "episode": 1},
+  "chylka": {"season": 1, "episode": 1},
+  "mlody-szeldon": {"season": 1, "episode": 1},
+  "ranczo": {"season": 1, "episode": 1}
 }
