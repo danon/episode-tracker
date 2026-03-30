@@ -184,12 +184,18 @@
   <div class="cards" id="cards"></div>
   <div class="toast" id="toast"></div>
 
-  <script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabase = createClient(
+      'https://yvrpfmsckwitwpnnluyl.supabase.co',
+      'sb_publishable_DreRUXTzLAE1oRD2rgPIhQ_qR9q3kPA'
+    );
+
     const shows = [
       { id: 'the-big-bang-theory', name: 'The Big Bang Theory', icon: '🔭', color: '#f0a500' },
       { id: 'the-office',          name: 'The Office',          icon: '📎', color: '#4fa3e0' },
       { id: 'sherlock',            name: 'Sherlock',            icon: '🔍', color: '#a0b4c8' },
-      { id: 'friends',             name: 'Friends',             icon: '☕', color: '#e06c4f' },
       { id: 'szadz',               name: 'Szadź',               icon: '❄️', color: '#60c8e0' },
       { id: 'chylka',              name: 'Chyłka',              icon: '⚖️', color: '#c06070' },
       { id: 'mlody-szeldon',       name: 'Młody Szeldon',       icon: '🧠', color: '#9b59b6' },
@@ -199,8 +205,9 @@
     let progress = {};
 
     async function load() {
-      const res = await fetch('/api/progress');
-      progress = await res.json();
+      const { data, error } = await supabase.from('progress').select();
+      if (error) { showToast('Failed to load progress.'); return; }
+      progress = Object.fromEntries((data || []).map(r => [r.show_id, { season: r.season, episode: r.episode }]));
       render();
     }
 
@@ -263,28 +270,16 @@
       const season  = parseInt(cur.season, 10);
       const episode = parseInt(cur.episode, 10) + 1;
 
-      try {
-        const res = await fetch(`/api/progress/${id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ season, episode }),
-        });
+      const { error } = await supabase.from('progress').upsert({ show_id: id, season, episode });
+      if (error) { showToast('Failed to save. Try again.'); return; }
 
-        if (res.ok) {
-          progress[id] = { season, episode };
-          document.getElementById(`sub-${id}`).textContent =
-            `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
-          document.getElementById(`s-${id}`).value = season;
-          document.getElementById(`e-${id}`).value = episode;
-          updateSetBtn(id);
-          showToast(`${name} → S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`);
-        } else {
-          const err = await res.json().catch(() => ({}));
-          showToast(err.error || 'Failed to save. Try again.');
-        }
-      } catch (e) {
-        showToast('Network error. Is the server running?');
-      }
+      progress[id] = { season, episode };
+      document.getElementById(`sub-${id}`).textContent =
+        `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
+      document.getElementById(`s-${id}`).value = season;
+      document.getElementById(`e-${id}`).value = episode;
+      updateSetBtn(id);
+      showToast(`${name} → S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`);
     }
 
     async function save(id, name) {
@@ -296,21 +291,14 @@
         return;
       }
 
-      const res = await fetch(`/api/progress/${id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ season, episode }),
-      });
+      const { error } = await supabase.from('progress').upsert({ show_id: id, season, episode });
+      if (error) { showToast('Failed to save. Try again.'); return; }
 
-      if (res.ok) {
-        progress[id] = { season, episode };
-        const sub = document.getElementById(`sub-${id}`);
-        sub.textContent = `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
-        updateSetBtn(id);
-        showToast(`${name} saved.`);
-      } else {
-        showToast('Failed to save. Try again.');
-      }
+      progress[id] = { season, episode };
+      document.getElementById(`sub-${id}`).textContent =
+        `Last watched: S${String(season).padStart(2,'0')}E${String(episode).padStart(2,'0')}`;
+      updateSetBtn(id);
+      showToast(`${name} saved.`);
     }
 
     let toastTimer;
